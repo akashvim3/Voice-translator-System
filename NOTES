@@ -1,0 +1,300 @@
+/* Chatbot Assistant + Streaming Integration (Deepgram STT + optional streaming TTS)
+   Commands:
+   - /stream_on                    -> start mic streaming to STT
+   - /stream_off                   -> stop mic streaming
+   - /stream_to <lang>             -> set target lang (e.g., /stream_to es-ES)
+   - /stream_tts_on                -> enable streaming TTS playback for translations
+   - /stream_tts_off               -> disable streaming TTS (use browser TTS or silent)
+*/
+
+(function () {
+  'use strict';
+
+  // ---- CONFIG (replace with secure tokening in production) ----
+  const STREAM_CFG = {
+    // Deepgram STT (websocket)
+    DG_WS_URL: 'wss://api.deepgram.com/v1/listen?model=nova-3&smart_format=true&interim_results=true&punctuate=true', // model and flags configurable
+    DG_API_KEY: 'YOUR_DEEPGRAM_API_KEY', // for dev only; use a server-issued ephemeral token in production
+    DG_PROTOCOL: ['token', 'YOUR_DEEPGRAM_API_KEY'], // subprotocol carries auth token
+
+    // Optional Deepgram TTS streaming (websocket)
+    DG_TTS_WS_URL: 'wss://api.deepgram.com/v1/speak?model=aura-asteria-en', // pick a voice/model per docs
+    DG_TTS_API_KEY: 'YOUR_DEEPGRAM_API_KEY',
+    DG_TTS_PROTOCOL: ['token', 'YOUR_DEEPGRAM_API_KEY'],
+
+    // MediaRecorder chunk size (ms)
+    CHUNK_MS: 250
+  }; // Deepgram’s browser WebSocket streaming uses MediaRecorder chunks and token subprotocols for auth [web:126][web:137][web:140].
+
+  // ---- DOM hooks (match your existing IDs) ----
+  const els = {
+    toggle: document.getElementById('chatbotToggle'),
+    container: document.getElementById('chatbotContainer'),
+    close: document.getElementById('chatbotClose'),
+    messages: document.getElementById('chatbotMessages'),
+    input: document.getElementById('chatbotInput'),
+    send: document.getElementById('chatbotSend'),
+    badge: document.querySelector('.chatbot-badge'),
+    // Translator UI
+    sourceLang: document.getElementById('sourceLanguage'),
+    targetLang: document.getElementById('targetLanguage'),
+    sourceText: document.getElementById('sourceText'),
+    targetText: document.getElementById('targetText'),
+    translateBtn: document.getElementById('translateBtn'),
+    speakBtn: document.getElementById('speakTranslation'),
+    clearHistoryBtn: document.getElementById('clearHistory'),
+    historyList: document.getElementById('historyList')
+  }; // These selectors allow the chatbot to drive your translator without global coupling [web:135].
+
+  // ---- Minimal chat render (unchanged core, trimmed here) ----
+  const STORE_KEY = 'vtp_chat_history_v2';
+  let CHAT = loadChat() || [];
+  function loadChat() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { return []; } } // localStorage retains assistant history across sessions [web:106][web:105].
+  function saveChat() { try { localStorage.setItem(STORE_KEY, JSON.stringify(CHAT)); } catch {} } // Storage may evict on quota pressure; errors are safely ignored [web:115].
+
+  function renderMessage(text, role = 'bot', quick = null, persist = true) {
+    if (!els.messages) return;
+    const wrap = document.createElement('div');
+    wrap.className = role === 'user' ? 'user-message' : 'bot-message';
+    wrap.innerHTML = `
+      <div class="message-avatar"><i class="fas ${role === 'user' ? 'fa-user' : 'fa-robot'}"></i></div>
+      <div class="message-content"><p style="white-space:pre-line">${text}</p></div>
+    `;
+    if (quick?.length) {
+      const q = document.createElement('div');
+      q.className = 'quick-replies';
+      quick.forEach(lbl => {
+        const b = document.createElement('button');
+        b.className = 'quick-reply';
+        b.dataset.message = lbl;
+        b.textContent = lbl;
+        q.appendChild(b);
+      });
+      wrap.querySelector('.message-content').appendChild(q);
+    }
+    els.messages.appendChild(wrap);
+    els.messages.scrollTop = els.messages.scrollHeight;
+    if (persist) { CHAT.push({ role, text, at: Date.now(), quick }); if (CHAT.length > 200) CHAT = CHAT.slice(-200); saveChat(); }
+  } // Quick replies guide users and reduce friction for common tasks in chat UIs [web:111][web:117].
+
+  // ---- Streaming controller (Deepgram STT + optional streaming TTS) ----
+  class StreamController {
+    constructor() {
+      this.sttSocket = null;
+      this.ttsSocket = null;
+      this.mediaRecorder = null;
+      this.stream = null;
+      this.enabledTTS = false;
+      this.targetLang = els.targetLang?.value || 'es-ES';
+      this.bufferedTranslation = '';
+    } // Keeps control flags and shared state for the live session [web:126][web:137].
+
+    async start() {
+      if (this.sttSocket) return renderMessage('Stream already running.', 'bot');
+      try {
+        this.sttSocket = new WebSocket(STREAM_CFG.DG_WS_URL, STREAM_CFG.DG_PROTOCOL);
+        this.sttSocket.binaryType = 'arraybuffer';
+        this.sttSocket.onopen = () => this._onSTTOpen();
+        this.sttSocket.onmessage = (e) => this._onSTTMessage(e);
+        this.sttSocket.onerror = () => renderMessage('STT stream error.', 'bot');
+        this.sttSocket.onclose = () => this._cleanupSTT();
+        renderMessage('Starting live transcription stream…', 'bot');
+      } catch (e) {
+        renderMessage('Failed to start streaming; check API config.', 'bot');
+      }
+    } // Deepgram live transcription uses a WS connection and streams mic chunks as audio/webm buffers [web:137][web:140].
+
+    async stop() {
+      if (this.mediaRecorder && this.mediaRecorder.state === 'recording') this.mediaRecorder.stop();
+      if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+      if (this.sttSocket && this.sttSocket.readyState === WebSocket.OPEN) this.sttSocket.close();
+      if (this.ttsSocket && this.ttsSocket.readyState === WebSocket.OPEN) this.ttsSocket.close();
+      this._cleanupSTT();
+      this._cleanupTTS();
+      renderMessage('Streaming stopped.', 'bot');
+    } // Always stop MediaRecorder and tracks before closing sockets to avoid leaks in browser audio graph [web:137][web:131].
+
+    async enableTTS() {
+      this.enabledTTS = true;
+      renderMessage('Streaming TTS enabled. Translations will be spoken as they arrive.', 'bot');
+    } // Streaming TTS can provide lower latency than SSML or post‑hoc synthesis in many scenarios [web:125][web:128].
+
+    async disableTTS() {
+      this.enabledTTS = false;
+      this._cleanupTTS();
+      renderMessage('Streaming TTS disabled.', 'bot');
+    } // Fallback to browser speechSynthesis remains available via the existing Speak button if desired [web:135].
+
+    setTargetLang(code) {
+      this.targetLang = code;
+      if (els.targetLang) { els.targetLang.value = code; els.targetLang.dispatchEvent(new Event('change', { bubbles: true })); }
+      renderMessage(`Target language set to ${code}.`, 'bot');
+    } // Keeps translator UI and stream controller in sync for target language [web:135].
+
+    async _onSTTOpen() {
+      try {
+        this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+        this.mediaRecorder = new MediaRecorder(this.stream, { mimeType: mime });
+        this.mediaRecorder.addEventListener('dataavailable', (ev) => {
+          if (!ev.data || ev.data.size === 0) return;
+          if (this.sttSocket?.readyState === WebSocket.OPEN) this.sttSocket.send(ev.data);
+        });
+        this.mediaRecorder.start(STREAM_CFG.CHUNK_MS);
+        renderMessage('Mic streaming active. Speaking now will live‑fill the source panel.', 'bot');
+      } catch (e) {
+        renderMessage('Microphone permission denied or unavailable.', 'bot');
+      }
+    } // MediaRecorder emits small chunks that are forwarded to the STT socket; Deepgram accepts webm/opus payloads directly [web:137][web:140].
+
+    async _onSTTMessage(event) {
+      try {
+        const msg = JSON.parse(event.data);
+        const alt = msg?.channel?.alternatives?.[0];
+        if (!alt) return;
+        const partial = (alt.transcript || '').trim();
+        if (!partial) return;
+
+        // 1) Show interim text live in the source panel
+        if (els.sourceText) els.sourceText.textContent = partial;
+
+        // 2) If Deepgram marks "is_final", trigger translate; otherwise throttle to reduce API calls
+        const isFinal = msg?.is_final === true || msg?.type === 'Results';
+        if (isFinal) {
+          this._requestTranslate(partial);
+        }
+      } catch (_) {
+        // ignore non‑JSON pings or keepalives
+      }
+    } // Deepgram messages include interim results and final segments; using finals avoids over‑translating mid‑words [web:126][web:137].
+
+    _cleanupSTT() {
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') try { this.mediaRecorder.stop(); } catch {}
+      this.mediaRecorder = null;
+      if (this.stream) { try { this.stream.getTracks().forEach(t => t.stop()); } catch {} this.stream = null; }
+      this.sttSocket = null;
+    } // Ensures proper release of media tracks and recorder after a session [web:137][web:131].
+
+    async _requestTranslate(text) {
+      // Use your existing translate button to keep logic centralized
+      if (els.sourceText) els.sourceText.textContent = text;
+      if (els.translateBtn) els.translateBtn.click();
+
+      // If streaming TTS is enabled, open or reuse TTS stream and speak translated fragments
+      if (this.enabledTTS) {
+        // Give the translator a moment to fill targetText, or wire a MutationObserver for tighter coupling
+        setTimeout(() => {
+          const translated = (els.targetText?.textContent || '').trim();
+          if (translated) this._speakStreaming(translated);
+        }, 250);
+      }
+    } // Reusing existing translate flow reduces duplication and keeps API selection consistent with your current setup [web:135].
+
+    _ensureTTSSocket() {
+      if (this.ttsSocket && this.ttsSocket.readyState === WebSocket.OPEN) return true;
+      try {
+        this.ttsSocket = new WebSocket(STREAM_CFG.DG_TTS_WS_URL, STREAM_CFG.DG_TTS_PROTOCOL);
+        this.ttsSocket.binaryType = 'arraybuffer';
+        this.ttsSocket.onmessage = (e) => {
+          // Received audio chunk (PCM/MP3 depending on model); play via an AudioContext
+          if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          e.data.arrayBuffer?.().then((buf) => this.audioCtx.decodeAudioData(buf.slice(0)).then(buffer => {
+            const src = this.audioCtx.createBufferSource();
+            src.buffer = buffer;
+            src.connect(this.audioCtx.destination);
+            src.start(0);
+          }).catch(() => {}));
+        };
+        this.ttsSocket.onclose = () => this._cleanupTTS();
+        return true;
+      } catch (e) {
+        renderMessage('Streaming TTS connection failed; falling back to browser speech.', 'bot');
+        return false;
+      }
+    } // TTS websocket streams audio frames which can be queued to an AudioContext for smooth playback [web:125][web:128].
+
+    _cleanupTTS() {
+      if (this.ttsSocket && this.ttsSocket.readyState === WebSocket.OPEN) this.ttsSocket.close();
+      this.ttsSocket = null;
+      if (this.audioCtx) { try { this.audioCtx.close(); } catch {} this.audioCtx = null; }
+    } // Cleanly closes audio graph and socket to avoid context leaks between sessions [web:125][web:128].
+
+    _speakStreaming(text) {
+      if (!this.enabledTTS) return;
+      if (!this._ensureTTSSocket()) {
+        // Browser fallback TTS
+        try {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = this.targetLang || 'es-ES';
+          speechSynthesis.cancel();
+          speechSynthesis.speak(u);
+        } catch {}
+        return;
+      }
+      try {
+        // For TTS WS, send text packets; exact schema depends on selected model (e.g., JSON or raw text)
+        // Here we send a minimal JSON instruction; consult model docs for fields like voice, language, and format
+        this.ttsSocket.send(JSON.stringify({ type: 'text', content: text }));
+      } catch (_) {
+        // If send fails mid‑stream, fallback to browser TTS
+        try {
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = this.targetLang || 'es-ES';
+          speechSynthesis.cancel();
+          speechSynthesis.speak(u);
+        } catch {}
+      }
+    } // Many TTS models accept incremental text frames; when unavailable, browser TTS remains a practical fallback [web:125][web:128].
+  }
+
+  const streamCtl = new StreamController(); // Controller instance manages one live session lifecycle [web:126][web:137].
+
+  // ---- Commands wiring (adds to your existing commands) ----
+  async function handleCommand(cmdLine) {
+    const [cmd, ...rest] = cmdLine.trim().split(/s+/);
+    const arg = rest.join(' ').trim();
+
+    switch (cmd.toLowerCase()) {
+      case '/stream_on':
+        return streamCtl.start(); // begin streaming mic → STT → translate
+      case '/stream_off':
+        return streamCtl.stop(); // stop all sockets and media
+      case '/stream_to':
+        if (!arg) return renderMessage('Usage: /stream_to es-ES', 'bot');
+        return streamCtl.setTargetLang(arg);
+      case '/stream_tts_on':
+        return streamCtl.enableTTS(); // stream TTS frames back as translations arrive
+      case '/stream_tts_off':
+        return streamCtl.disableTTS();
+      default:
+        // fall through to your existing command handler or KB
+        return legacyHandle(cmdLine);
+    }
+  } // These commands let users control streaming without leaving chat, mirroring pro UIs for live translation [web:137][web:135].
+
+  // ---- Minimal legacy glue (keep your current chatbot logic here) ----
+  function legacyHandle(line) {
+    renderMessage('Unknown command. Try /stream_on, /stream_off, /stream_to <lang>, /stream_tts_on, /stream_tts_off, or /help.', 'bot');
+  } // Users discoverability improves with explicit help prompts in chat assistants [web:117][web:111].
+
+  // ---- UI bindings ----
+  function bind() {
+    // Toggle / send / input
+    els.toggle?.addEventListener('click', () => { els.container?.classList.toggle('active'); if (els.container?.classList.contains('active')) els.input?.focus(); });
+    els.close?.addEventListener('click', () => els.container?.classList.remove('active'));
+    els.send?.addEventListener('click', () => { const t = (els.input?.value || '').trim(); if (!t) return; renderMessage(t, 'user'); processUser(t); els.input.value=''; });
+    els.input?.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); const t=(els.input?.value||'').trim(); if (!t) return; renderMessage(t,'user'); processUser(t); els.input.value=''; }});
+    document.addEventListener('click', (e) => { const b = e.target.closest('.quick-reply'); if (!b) return; const t = b.dataset.message || b.textContent || ''; if (!t.trim()) return; renderMessage(t,'user'); processUser(t); });
+    // Greeting if empty
+    if (!CHAT.length) renderMessage('Type /stream_on to start live translation; use /stream_to es-ES to change target language; /stream_tts_on to hear results as they arrive.', 'bot', ['How do I use voice translation?', '/stream_on', '/stream_to es-ES']);
+  } // Good chatbot UX exposes actionable quick starts and commands inline for onboarding [web:117][web:120].
+
+  async function processUser(text) {
+    if (text.startsWith('/')) return handleCommand(text);
+    // Basic KB fallbacks
+    if (/stream/i.test(text)) return renderMessage('Use /stream_on to start, /stream_off to stop, /stream_to es-ES to set target, and /stream_tts_on to hear results.', 'bot');
+    return renderMessage('Ask about streaming, or use commands: /stream_on, /stream_off, /stream_to <lang>, /stream_tts_on, /stream_tts_off.', 'bot');
+  } // Lightweight NLU is sufficient since power users often prefer explicit slash commands for reliability [web:117][web:111].
+
+  bind();
+})();

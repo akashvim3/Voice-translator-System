@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional Voice-to-Voice Language Translator - Real-time speech translation in 100+ languages">
+    <title>VoiceTranslate Pro - Real-Time Voice Translation</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <img src="assets/images/logo.png" alt="VoiceTranslate Pro Logo" onerror="this.style.display='none'">
+                <span class="logo-text"><i class="fas fa-language"></i> VoiceTranslate Pro</span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="help.html">Help</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Speak Any Language <span class="highlight">Instantly</span></h1>
+                <p class="hero-subtitle">Break language barriers with our AI-powered real-time voice translation technology. Translate speech to speech in over 100 languages with natural pronunciation.</p>
+                <div class="hero-buttons">
+                    <a href="#translator" class="btn btn-primary">Start Translating</a>
+                    <a href="features.html" class="btn btn-secondary">Learn More</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <i class="fas fa-globe"></i>
+                        <span class="stat-number">100+</span>
+                        <span class="stat-label">Languages</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-users"></i>
+                        <span class="stat-number">1M+</span>
+                        <span class="stat-label">Active Users</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-comments"></i>
+                        <span class="stat-number">10M+</span>
+                        <span class="stat-label">Translations</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Translator Section -->
+    <section class="translator-section" id="translator">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Voice Translation Studio</h2>
+                <p class="section-subtitle">Speak naturally and hear your words translated in real-time</p>
+            </div>
+
+            <div class="translator-card">
+                <!-- Language Selection -->
+                <div class="language-selector">
+                    <div class="language-box">
+                        <label for="sourceLanguage">From:</label>
+                        <select id="sourceLanguage" class="language-select">
+                            <option value="en-US">English (US)</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="fr-FR">French</option>
+                            <option value="de-DE">German</option>
+                            <option value="it-IT">Italian</option>
+                            <option value="pt-PT">Portuguese</option>
+                            <option value="ru-RU">Russian</option>
+                            <option value="zh-CN">Chinese (Mandarin)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="hi-IN">Hindi</option>
+                            <option value="tr-TR">Turkish</option>
+                            <option value="pl-PL">Polish</option>
+                            <option value="nl-NL">Dutch</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="da-DK">Danish</option>
+                            <option value="fi-FI">Finnish</option>
+                            <option value="no-NO">Norwegian</option>
+                            <option value="cs-CZ">Czech</option>
+                        </select>
+                        <i class="fas fa-microphone language-icon"></i>
+                    </div>
+
+                    <button class="swap-btn" id="swapLanguages" title="Swap Languages">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+
+                    <div class="language-box">
+                        <label for="targetLanguage">To:</label>
+                        <select id="targetLanguage" class="language-select">
+                            <option value="es-ES">Spanish</option>
+                            <option value="en-US">English (US)</option>
+                            <option value="fr-FR">French</option>
+                            <option value="de-DE">German</option>
+                            <option value="it-IT">Italian</option>
+                            <option value="pt-PT">Portuguese</option>
+                            <option value="ru-RU">Russian</option>
+                            <option value="zh-CN">Chinese (Mandarin)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="ko-KR">Korean</option>
+                            <option value="ar-SA">Arabic</option>
+                            <option value="hi-IN">Hindi</option>
+                            <option value="tr-TR">Turkish</option>
+                            <option value="pl-PL">Polish</option>
+                            <option value="nl-NL">Dutch</option>
+                            <option value="sv-SE">Swedish</option>
+                            <option value="da-DK">Danish</option>
+                            <option value="fi-FI">Finnish</option>
+                            <option value="no-NO">Norwegian</option>
+                            <option value="cs-CZ">Czech</option>
+                        </select>
+                        <i class="fas fa-volume-up language-icon"></i>
+                    </div>
+                </div>
+
+                <!-- Translation Display -->
+                <div class="translation-display">
+                    <div class="translation-panel source-panel">
+                        <div class="panel-header">
+                            <h3>Original Speech</h3>
+                            <button class="clear-btn" id="clearSource" title="Clear">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="text-area" id="sourceText" contenteditable="true">
+                            <span class="placeholder">Start speaking or type here...</span>
+                        </div>
+                        <div class="panel-footer">
+                            <span class="char-count" id="sourceCount">0 characters</span>
+                            <span class="language-indicator" id="sourceIndicator">English (US)</span>
+                        </div>
+                    </div>
+
+                    <div class="translation-divider">
+                        <div class="divider-line"></div>
+                        <div class="translate-icon">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div class="divider-line"></div>
+                    </div>
+
+                    <div class="translation-panel target-panel">
+                        <div class="panel-header">
+                            <h3>Translated Speech</h3>
+                            <button class="copy-btn" id="copyTranslation" title="Copy Translation">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <div class="text-area" id="targetText">
+                            <span class="placeholder">Translation will appear here...</span>
+                        </div>
+                        <div class="panel-footer">
+                            <span class="char-count" id="targetCount">0 characters</span>
+                            <span class="language-indicator" id="targetIndicator">Spanish</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Buttons -->
+                <div class="control-panel">
+                    <button class="control-btn record-btn" id="startRecording">
+                        <i class="fas fa-microphone"></i>
+                        <span>Start Speaking</span>
+                    </button>
+                    <button class="control-btn stop-btn" id="stopRecording" disabled>
+                        <i class="fas fa-stop"></i>
+                        <span>Stop Recording</span>
+                    </button>
+                    <button class="control-btn translate-btn" id="translateBtn">
+                        <i class="fas fa-language"></i>
+                        <span>Translate</span>
+                    </button>
+                    <button class="control-btn speak-btn" id="speakTranslation">
+                        <i class="fas fa-volume-up"></i>
+                        <span>Speak Translation</span>
+                    </button>
+                </div>
+
+                <!-- Status Display -->
+                <div class="status-display" id="statusDisplay">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Ready to translate</span>
+                    </div>
+                    <div class="audio-visualizer" id="audioVisualizer">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+                </div>
+
+                <!-- Translation History -->
+                <div class="translation-history">
+                    <div class="history-header">
+                        <h3><i class="fas fa-history"></i> Recent Translations</h3>
+                        <button class="clear-history-btn" id="clearHistory">Clear All</button>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <p class="no-history">No translation history yet. Start translating!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Preview -->
+    <section class="features-preview">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Why Choose VoiceTranslate Pro?</h2>
+                <p class="section-subtitle">Advanced features for seamless communication</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <img src="assets/images/feature-1.png" alt="Real-time Translation" class="feature-img" onerror="this.style.display='none'">
+                    <h3>Real-Time Translation</h3>
+                    <p>Instant voice-to-voice translation with minimal latency. Speak naturally and hear translations in real-time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <img src="assets/images/feature-2.png" alt="AI-Powered" class="feature-img" onerror="this.style.display='none'">
+                    <h3>AI-Powered Accuracy</h3>
+                    <p>Advanced machine learning algorithms ensure contextually accurate translations with natural pronunciation.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <img src="assets/images/feature-3.png" alt="Secure & Private" class="feature-img" onerror="this.style.display='none'">
+                    <h3>Secure & Private</h3>
+                    <p>Your conversations are encrypted and never stored. We prioritize your privacy and data security.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to Break Language Barriers?</h2>
+                <p>Join millions of users worldwide who trust VoiceTranslate Pro for their translation needs</p>
+                <a href="#translator" class="btn btn-primary btn-large">Get Started Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget" id="chatbotWidget">
+        <button class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comments"></i>
+            <span class="chatbot-badge">1</span>
+        </button>
+
+        <div class="chatbot-container" id="chatbotContainer">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="fas fa-robot"></i>
+                    <span>Translation Assistant</span>
+                </div>
+                <button class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Hello! 👋 I'm your translation assistant. How can I help you today?</p>
+                        <div class="quick-replies">
+                            <button class="quick-reply" data-message="How do I use voice translation?">Voice Translation Guide</button>
+                            <button class="quick-reply" data-message="What languages are supported?">Supported Languages</button>
+                            <button class="quick-reply" data-message="How accurate are the translations?">Translation Accuracy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chatbot-input">
+                <label for="chatbotInput"></label><input type="text" id="chatbotInput" placeholder="Type your message..." autocomplete="off">
+                <button class="chatbot-send" id="chatbotSend">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-logo">
+                        <i class="fas fa-language"></i> VoiceTranslate Pro
+                    </h3>
+                    <p class="footer-description">
+                        Breaking language barriers with advanced AI-powered voice translation technology. Communicate freely in over 100 languages.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="help.html">Help Center</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="help.html">FAQ</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul class="footer-contact">
+                        <li><i class="fas fa-envelope"></i> support@voicetranslate.com</li>
+                        <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Translation Street, Tech City</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 VoiceTranslate Pro. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/translator.js"></script>
+    <script src="assets/js/chatbot.js"></script>
+    <script src="assets/js/main.js"></script>
+    <!-- API Configuration -->
+    <script src="config/api-config.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Get help with VoiceTranslate Pro - FAQ, tutorials, and troubleshooting guides">
+    <title>Help Center - VoiceTranslate Pro</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <img src="assets/images/logo.png" alt="VoiceTranslate Pro Logo" onerror="this.style.display='none'">
+                <span class="logo-text"><i class="fas fa-language"></i> VoiceTranslate Pro</span>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="features.html">Features</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="help.html" class="active">Help</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Help Hero -->
+    <section class="help-hero">
+        <div class="container">
+            <h1>How Can We Help You?</h1>
+            <p>Search our knowledge base or browse categories below</p>
+            <div class="search-box">
+                <label for="helpSearch"></label><input type="text" id="helpSearch" placeholder="Search for answers...">
+                <button type="button" onclick="searchHelp()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Help Categories -->
+    <section class="help-content">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Browse by Category</h2>
+                <p class="section-subtitle">Find answers organized by topic</p>
+            </div>
+
+            <div class="help-categories">
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Getting Started</h3>
+                    <p>Learn the basics of using VoiceTranslate Pro</p>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <h3>Voice Translation</h3>
+                    <p>Master voice-to-voice translation features</p>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                    <h3>Technical Support</h3>
+                    <p>Troubleshoot technical issues and errors</p>
+                </div>
+
+                <div class="category-card">
+                    <div class="category-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Privacy & Security</h3>
+                    <p>Learn how we protect your data</p>
+                </div>
+            </div>
+
+            <!-- FAQ Accordion -->
+            <div class="faq-section">
+                <h2>Frequently Asked Questions</h2>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">How do I start using VoiceTranslate Pro?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Getting started is easy:</p>
+                                <ul>
+                                    <li>Visit our homepage and scroll to the translation section</li>
+                                    <li>Select your source and target languages from the dropdown menus</li>
+                                    <li>Click "Start Speaking" and allow microphone access when prompted</li>
+                                    <li>Speak clearly into your microphone</li>
+                                    <li>Click "Stop Recording" when finished</li>
+                                    <li>Your translation will appear automatically with audio playback</li>
+                                </ul>
+                                <p>No registration or download is required!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">What languages are supported?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>VoiceTranslate Pro supports over 100 languages including:</p>
+                                <ul>
+                                    <li>European: English, Spanish, French, German, Italian, Portuguese, Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Greek, Romanian</li>
+                                    <li>Asian: Chinese (Mandarin & Cantonese), Japanese, Korean, Hindi, Bengali, Tamil, Telugu, Thai, Vietnamese, Indonesian, Malay</li>
+                                    <li>Middle Eastern: Arabic, Hebrew, Persian, Turkish, Urdu</li>
+                                    <li>Other: Russian, Ukrainian, Swahili, Zulu, Afrikaans, and many more</li>
+                                </ul>
+                                <p>We continuously add new languages based on user demand.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">Why isn't my microphone working?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>If your microphone isn't working, try these solutions:</p>
+                                <ul>
+                                    <li>Check that you've granted microphone permission to your browser</li>
+                                    <li>Ensure your microphone is properly connected and not muted</li>
+                                    <li>Try using a supported browser (Chrome, Edge, Safari, Firefox)</li>
+                                    <li>Close other applications that might be using your microphone</li>
+                                    <li>Restart your browser and try again</li>
+                                    <li>Check your system audio settings to ensure the correct microphone is selected</li>
+                                </ul>
+                                <p>Still having issues? Contact our support team for personalized assistance.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">How accurate are the translations?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Our AI-powered translation system achieves 95%+ accuracy for most language pairs. Accuracy depends on several factors:</p>
+                                <ul>
+                                    <li>Audio quality and clarity of speech</li>
+                                    <li>Background noise levels</li>
+                                    <li>Complexity of the content being translated</li>
+                                    <li>Language pair (some combinations are more accurate than others)</li>
+                                    <li>Use of idioms, slang, or technical terminology</li>
+                                </ul>
+                                <p>We continuously improve our AI models to deliver better accuracy across all languages.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">Is my data safe and private?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Absolutely! Your privacy is our top priority:</p>
+                                <ul>
+                                    <li>We do NOT store your voice recordings on our servers</li>
+                                    <li>All audio processing happens in real-time with immediate deletion</li>
+                                    <li>Translation history is stored locally on your device only</li>
+                                    <li>We use end-to-end encryption for all data transmission</li>
+                                    <li>We never share your data with third parties</li>
+                                    <li>We are fully compliant with GDPR and CCPA regulations</li>
+                                </ul>
+                                <p>Read our Privacy Policy for complete details.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">Can I use VoiceTranslate Pro offline?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Currently, VoiceTranslate Pro requires an internet connection to function because:</p>
+                                <ul>
+                                    <li>Translation processing uses cloud-based AI models</li>
+                                    <li>Speech recognition requires server-side processing</li>
+                                    <li>Voice synthesis needs real-time data access</li>
+                                </ul>
+                                <p>We're working on an offline mode for limited functionality in future updates. Stay tuned!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">Is VoiceTranslate Pro really free?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Yes! VoiceTranslate Pro is 100% free with no hidden costs:</p>
+                                <ul>
+                                    <li>No registration or account required</li>
+                                    <li>Unlimited translations</li>
+                                    <li>Access to all 100+ languages</li>
+                                    <li>All features included</li>
+                                    <li>No ads or premium tiers</li>
+                                    <li>No credit card required</li>
+                                </ul>
+                                <p>We believe language should never be a barrier to communication.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">What browsers are supported?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>VoiceTranslate Pro works best on modern browsers that support the Web Speech API:</p>
+                                <ul>
+                                    <li>Google Chrome (Recommended) - Version 80+</li>
+                                    <li>Microsoft Edge - Version 80+</li>
+                                    <li>Safari - Version 14+ (macOS and iOS)</li>
+                                    <li>Firefox - Version 80+ (limited speech recognition)</li>
+                                    <li>Opera - Version 67+</li>
+                                </ul>
+                                <p>For the best experience, we recommend using the latest version of Chrome or Edge.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">How can I improve translation accuracy?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Follow these tips for the best results:</p>
+                                <ul>
+                                    <li>Speak clearly and at a moderate pace</li>
+                                    <li>Use a quality microphone in a quiet environment</li>
+                                    <li>Minimize background noise and echoes</li>
+                                    <li>Speak in complete sentences rather than fragments</li>
+                                    <li>Avoid heavy accents or unclear pronunciation when possible</li>
+                                    <li>Position your microphone 6-12 inches from your mouth</li>
+                                    <li>Use headphones to prevent audio feedback</li>
+                                </ul>
+                                <p>Better audio input leads to better translation output!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span class="accordion-title">Can I save my translation history?</span>
+                            <div class="accordion-icon">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body">
+                                <p>Yes! Translation history is automatically saved locally on your device:</p>
+                                <ul>
+                                    <li>View your last 10 translations in the history section</li>
+                                    <li>Copy any previous translation with one click</li>
+                                    <li>Clear history anytime for privacy</li>
+                                    <li>History is stored using browser localStorage</li>
+                                    <li>Data stays on your device - never uploaded to servers</li>
+                                </ul>
+                                <p>Note: Clearing browser data or cookies will delete your history.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Tutorials -->
+    <section class="video-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Video Tutorials</h2>
+                <p class="section-subtitle">Watch step-by-step guides to master VoiceTranslate Pro</p>
+            </div>
+
+            <div class="video-grid">
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3>Getting Started Guide</h3>
+                        <p>Learn the basics of voice translation in under 3 minutes</p>
+                        <span class="video-duration"><i class="fas fa-clock"></i> 2:45</span>
+                    </div>
+                </div>
+
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3>Advanced Translation Tips</h3>
+                        <p>Maximize accuracy with these pro tips and tricks</p>
+                        <span class="video-duration"><i class="fas fa-clock"></i> 5:20</span>
+                    </div>
+                </div>
+
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <div class="play-button">
+                            <i class="fas fa-play"></i>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h3>Troubleshooting Common Issues</h3>
+                        <p>Quick fixes for microphone and audio problems</p>
+                        <span class="video-duration"><i class="fas fa-clock"></i> 4:15</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Still Have Questions?</h2>
+                <p>Our support team is here to help 24/7</p>
+                <a href="contact.html" class="btn btn-primary btn-large">Contact Support</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget" id="chatbotWidget">
+        <button class="chatbot-toggle" id="chatbotToggle">
+            <i class="fas fa-comments"></i>
+            <span class="chatbot-badge">1</span>
+        </button>
+
+        <div class="chatbot-container" id="chatbotContainer">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="fas fa-robot"></i>
+                    <span>Translation Assistant</span>
+                </div>
+                <button class="chatbot-close" id="chatbotClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="chatbot-messages" id="chatbotMessages">
+                <div class="bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Hello! 👋 I'm your translation assistant. How can I help you today?</p>
+                        <div class="quick-replies">
+                            <button class="quick-reply" data-message="How do I use voice translation?">Voice Translation Guide</button>
+                            <button class="quick-reply" data-message="What languages are supported?">Supported Languages</button>
+                            <button class="quick-reply" data-message="How accurate are the translations?">Translation Accuracy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chatbot-input">
+                <label for="chatbotInput"></label><input type="text" id="chatbotInput" placeholder="Type your message..." autocomplete="off">
+                <button class="chatbot-send" id="chatbotSend">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-logo">
+                        <i class="fas fa-language"></i> VoiceTranslate Pro
+                    </h3>
+                    <p class="footer-description">
+                        Breaking language barriers with advanced AI-powered voice translation technology. Communicate freely in over 100 languages.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul class="footer-links">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="about.html">About Us</a></li>
+                        <li><a href="help.html">Help Center</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="contact.html">Contact Us</a></li>
+                        <li><a href="help.html">FAQ</a></li>
+                        <li><a href="privacy.html">Privacy Policy</a></li>
+                        <li><a href="terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul class="footer-contact">
+                        <li><i class="fas fa-envelope"></i> support@voicetranslate.com</li>
+                        <li><i class="fas fa-phone"></i> +1 (555) 123-4567</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Translation Street, Tech City</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2025 VoiceTranslate Pro. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                    <a href="contact.html">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="assets/js/chatbot.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script>
+        // Accordion functionality
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+
+            // Close all accordions
+            document.querySelectorAll('.accordion-header').forEach(h => {
+                h.classList.remove('active');
+                h.nextElementSibling.classList.remove('active');
+            });
+
+            // Open clicked accordion if it wasn't active
+            if (!isActive) {
+                header.classList.add('active');
+                content.classList.add('active');
+            }
+        }
+
+        // Search functionality
+        function searchHelp() {
+            const searchTerm = document.getElementById('helpSearch').value.toLowerCase();
+
+            if (searchTerm.trim() === '') {
+                alert('Please enter a search term');
+                return;
+            }
+
+            const accordionItems = document.querySelectorAll('.accordion-item');
+            let found = false;
+
+            accordionItems.forEach(item => {
+                const title = item.querySelector('.accordion-title').textContent.toLowerCase();
+                const content = item.querySelector('.accordion-body').textContent.toLowerCase();
+
+                if (title.includes(searchTerm) || content.includes(searchTerm)) {
+                    const header = item.querySelector('.accordion-header');
+
+                    // Close all first
+                    document.querySelectorAll('.accordion-header').forEach(h => {
+                        h.classList.remove('active');
+                        h.nextElementSibling.classList.remove('active');
+                    });
+
+                    // Open matching item
+                    header.classList.add('active');
+                    header.nextElementSibling.classList.add('active');
+
+                    // Scroll to item
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    found = true;
+                    return;
+                }
+            });
+
+            if (!found) {
+                alert('No results found for "' + searchTerm + '". Try different keywords or contact support.');
+            }
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('helpSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchHelp();
+            }
+        });
+    </script>
+</body>
+</html>
