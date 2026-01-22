@@ -46,50 +46,61 @@ class VoiceTranslator {
     }
 
     initializeSpeechRecognition() {
-        // Use Web Speech API for speech recognition (always available)
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            this.recognition = new SpeechRecognition();
-            this.recognition.continuous = true;
-            this.recognition.interimResults = true;
-            this.recognition.lang = this.sourceLanguage;
+        // Use Web Speech API for speech recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (SpeechRecognition) {
+            try {
+                this.recognition = new SpeechRecognition();
+                this.recognition.continuous = true;
+                this.recognition.interimResults = true;
+                this.recognition.lang = this.sourceLanguage;
 
-            this.recognition.onstart = () => {
-                this.isRecording = true;
-                this.updateStatus('Recording...', true);
-                this.elements.startRecording.classList.add('recording');
-                this.elements.stopRecording.disabled = false;
-            };
+                this.recognition.onstart = () => {
+                    this.isRecording = true;
+                    this.updateStatus('Recording...', true);
+                    this.elements.startRecording.classList.add('recording');
+                    this.elements.stopRecording.disabled = false;
+                };
 
-            this.recognition.onresult = (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
+                this.recognition.onresult = (event) => {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
 
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript + ' ';
-                    } else {
-                        interimTranscript += transcript;
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript + ' ';
+                        } else {
+                            interimTranscript += transcript;
+                        }
                     }
-                }
 
-                const currentText = this.elements.sourceText.textContent.replace('Start speaking or type here...', '');
-                this.elements.sourceText.textContent = currentText + finalTranscript + interimTranscript;
-                this.updateCharCount();
-            };
+                    const currentText = this.elements.sourceText.textContent.replace('Start speaking or type here...', '');
+                    this.elements.sourceText.textContent = currentText + finalTranscript + interimTranscript;
+                    this.updateCharCount();
+                };
 
-            this.recognition.onerror = (event) => {
-                console.error('Speech recognition error:', event.error);
-                this.updateStatus(`Error: ${event.error}`, false);
-                this.stopRecording();
-            };
+                this.recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    this.updateStatus(`Error: ${event.error}`, false);
+                    this.stopRecording();
+                };
 
-            this.recognition.onend = () => {
-                if (this.isRecording) {
-                    this.recognition.start();
-                }
-            };
+                this.recognition.onend = () => {
+                    if (this.isRecording) {
+                        // Attempt to restart recognition
+                        try {
+                            this.recognition.start();
+                        } catch (e) {
+                            console.warn('Could not restart recognition:', e);
+                        }
+                    }
+                };
+            } catch (e) {
+                console.warn('Speech recognition initialization failed:', e);
+                this.initializeAdvancedRecording();
+            }
         } else {
             console.warn('Speech recognition not supported. Using alternative method.');
             this.initializeAdvancedRecording();
@@ -344,6 +355,17 @@ class VoiceTranslator {
             this.updateStatus('Please provide text to translate', false);
             return;
         }
+        
+        // Validate text length
+        if (sourceText.length < this.apiConfig.SETTINGS.MIN_TEXT_LENGTH) {
+            this.updateStatus('Text too short to translate', false);
+            return;
+        }
+        
+        if (sourceText.length > this.apiConfig.SETTINGS.MAX_TEXT_LENGTH) {
+            this.updateStatus('Text too long to translate', false);
+            return;
+        }
 
         this.updateStatus('Translating...', true);
 
@@ -351,12 +373,23 @@ class VoiceTranslator {
             let translatedText = '';
             const activeAPI = this.apiConfig.ACTIVE_API;
 
+            // Try primary API first
             switch (activeAPI) {
                 case 'google':
-                    translatedText = await this.translateWithGoogle(sourceText);
+                    try {
+                        translatedText = await this.translateWithGoogle(sourceText);
+                    } catch (e) {
+                        console.warn('Google translation failed, trying fallback:', e);
+                        translatedText = await this.translateWithMyMemory(sourceText);
+                    }
                     break;
                 case 'azure':
-                    translatedText = await this.translateWithAzure(sourceText);
+                    try {
+                        translatedText = await this.translateWithAzure(sourceText);
+                    } catch (e) {
+                        console.warn('Azure translation failed, trying fallback:', e);
+                        translatedText = await this.translateWithMyMemory(sourceText);
+                    }
                     break;
                 default:
                     translatedText = await this.translateWithMyMemory(sourceText);
@@ -371,16 +404,14 @@ class VoiceTranslator {
 
         } catch (error) {
             console.error('Translation error:', error);
-            this.updateStatus('Translation error. Trying fallback...', false);
+            this.updateStatus('Translation failed', false);
 
-            // Fallback to MyMemory
+            // Final fallback - show original text
             try {
-                const fallbackTranslation = await this.translateWithMyMemory(sourceText);
-                this.elements.targetText.textContent = fallbackTranslation;
+                this.elements.targetText.textContent = 'Translation unavailable. Original text: ' + sourceText;
                 this.updateCharCount();
-                this.addToHistory(sourceText, fallbackTranslation);
-            } catch (fallbackError) {
-                this.updateStatus('Translation failed', false);
+            } catch (displayError) {
+                console.error('Failed to display error message:', displayError);
             }
         }
     }
@@ -435,17 +466,35 @@ class VoiceTranslator {
         const sourceLang = this.sourceLanguage.split('-')[0];
         const targetLang = this.targetLanguage.split('-')[0];
 
-        const response = await fetch(
-            `${this.apiConfig.MYMEMORY.ENDPOINT}?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`
-        );
+        try {
+            const response = await fetch(
+                `${this.apiConfig.MYMEMORY.ENDPOINT}?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
 
-        const data = await response.json();
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
-        if (data.responseStatus === 200) {
-            return data.responseData.translatedText;
+            const data = await response.json();
+
+            if (data.responseStatus === 200 && data.responseData) {
+                return data.responseData.translatedText || text;
+            } else if (data.responseData && data.responseData.translatedText) {
+                return data.responseData.translatedText;
+            }
+
+            throw new Error(data.responseDetails || 'Translation failed');
+        } catch (error) {
+            console.error('MyMemory translation error:', error);
+            // Return original text if translation fails
+            return text;
         }
-
-        throw new Error('Translation failed');
     }
 
     speakTranslation() {
@@ -466,6 +515,11 @@ class VoiceTranslator {
 
     // Browser TTS (Free)
     speakWithBrowser(text) {
+        if (!text || text.trim() === '') {
+            this.updateStatus('No text to speak', false);
+            return;
+        }
+        
         if (this.synthesis.speaking) {
             this.synthesis.cancel();
         }
@@ -475,17 +529,35 @@ class VoiceTranslator {
         utterance.rate = 0.9;
         utterance.pitch = 1;
 
-        const voices = this.synthesis.getVoices();
-        const matchingVoice = voices.find(voice => voice.lang.startsWith(this.targetLanguage.split('-')[0]));
-        if (matchingVoice) {
-            utterance.voice = matchingVoice;
+        // Wait a bit for voices to load if needed
+        if (this.synthesis.getVoices().length === 0) {
+            this.synthesis.onvoiceschanged = () => {
+                const voices = this.synthesis.getVoices();
+                const matchingVoice = voices.find(voice => voice.lang.startsWith(this.targetLanguage.split('-')[0]));
+                if (matchingVoice) {
+                    utterance.voice = matchingVoice;
+                }
+            };
+        } else {
+            const voices = this.synthesis.getVoices();
+            const matchingVoice = voices.find(voice => voice.lang.startsWith(this.targetLanguage.split('-')[0]));
+            if (matchingVoice) {
+                utterance.voice = matchingVoice;
+            }
         }
 
-        utterance.onstart = () => this.updateStatus('Speaking translation...', true);
-        utterance.onend = () => this.updateStatus('Translation spoken', false);
+        utterance.onstart = () => {
+            this.updateStatus('Speaking translation...', true);
+            this.elements.speakTranslation.classList.add('speaking');
+        };
+        utterance.onend = () => {
+            this.updateStatus('Translation spoken', false);
+            this.elements.speakTranslation.classList.remove('speaking');
+        };
         utterance.onerror = (error) => {
             console.error('Speech synthesis error:', error);
             this.updateStatus('Error speaking translation', false);
+            this.elements.speakTranslation.classList.remove('speaking');
         };
 
         this.synthesis.speak(utterance);
@@ -691,10 +763,12 @@ class VoiceTranslator {
 
         if (isActive) {
             statusDot.classList.add('recording');
-            visualizer.style.opacity = '1';
+            visualizer.classList.add('active');
+            visualizer.classList.remove('inactive');
         } else {
             statusDot.classList.remove('recording');
-            visualizer.style.opacity = '0.3';
+            visualizer.classList.add('inactive');
+            visualizer.classList.remove('active');
         }
     }
 

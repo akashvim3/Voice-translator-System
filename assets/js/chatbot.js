@@ -9,28 +9,32 @@
 (function () {
   'use strict';
 
-  // --- Selectors (matches provided HTML) ---
-  const els = {
-    toggle: document.getElementById('chatbotToggle'),
-    container: document.getElementById('chatbotContainer'),
-    close: document.getElementById('chatbotClose'),
-    messages: document.getElementById('chatbotMessages'),
-    input: document.getElementById('chatbotInput'),
-    send: document.getElementById('chatbotSend'),
-    badge: document.querySelector('.chatbot-badge'),
+  // --- Element selectors - initialized after DOM loads ---
+  let els = {};
+  
+  function initializeElements() {
+    els = {
+      toggle: document.getElementById('chatbotToggle'),
+      container: document.getElementById('chatbotContainer'),
+      close: document.getElementById('chatbotClose'),
+      messages: document.getElementById('chatbotMessages'),
+      input: document.getElementById('chatbotInput'),
+      send: document.getElementById('chatbotSend'),
+      badge: document.querySelector('.chatbot-badge'),
 
-    // Translator controls for DOM-driven actions (no global object needed)
-    sourceLang: document.getElementById('sourceLanguage'),
-    targetLang: document.getElementById('targetLanguage'),
-    sourceText: document.getElementById('sourceText'),
-    targetText: document.getElementById('targetText'),
-    startBtn: document.getElementById('startRecording'),
-    stopBtn: document.getElementById('stopRecording'),
-    translateBtn: document.getElementById('translateBtn'),
-    speakBtn: document.getElementById('speakTranslation'),
-    clearHistoryBtn: document.getElementById('clearHistory'),
-    historyList: document.getElementById('historyList')
-  };
+      // Translator controls for DOM-driven actions (no global object needed)
+      sourceLang: document.getElementById('sourceLanguage'),
+      targetLang: document.getElementById('targetLanguage'),
+      sourceText: document.getElementById('sourceText'),
+      targetText: document.getElementById('targetText'),
+      startBtn: document.getElementById('startRecording'),
+      stopBtn: document.getElementById('stopRecording'),
+      translateBtn: document.getElementById('translateBtn'),
+      speakBtn: document.getElementById('speakTranslation'),
+      clearHistoryBtn: document.getElementById('clearHistory'),
+      historyList: document.getElementById('historyList')
+    };
+  }
 
   // --- Storage keys (localStorage) ---
   const STORE = {
@@ -175,10 +179,10 @@
   // --- Bot responses knowledge base ---
   const KB = [
     {
-      intents: ['how do i use voice translation', 'voice translation guide', 'how to use'],
+      intents: ['how do i use voice translation', 'voice translation guide', 'how to use', 'help with translation'],
       text:
-        'To use voice translation: 1) Pick From/To languages, 2) Click Start Speaking and allow mic, 3) Click Stop Recording, 4) Press Translate if needed, 5) Press Speak Translation to hear it. You can also type text in the left panel and hit Translate.',
-      quick: ['What languages are supported?', 'How accurate are translations?']
+        'To use voice translation: 1) Pick From/To languages, 2) Click Start Speaking and allow mic, 3) Click Stop Recording, 4) Press Translate if needed, 5) Press Speak Translation to hear it. You can also type text in the left panel and hit Translate. Use commands like /from, /to, /start, /stop, /translate, /speak, /history, /clearhistory.',
+      quick: ['What languages are supported?', 'How accurate are translations?', 'Show me commands']
     },
     {
       intents: ['what languages are supported', 'supported languages', 'languages'],
@@ -303,9 +307,7 @@ To: ${to}`;
         });
         renderMessage(`Recent translations:
 
-${last.join('
-
-')}`, 'bot');
+${last.join('\n\n')}`, 'bot');
         return;
 
       case '/clearhistory':
@@ -315,8 +317,7 @@ ${last.join('
 
       case '/help':
         renderMessage(
-          'Commands:
-/start, /stop, /translate [text], /speak, /from <locale>, /to <locale>, /history, /clearhistory, /help',
+          'Commands:\n/start, /stop, /translate [text], /speak, /from <locale>, /to <locale>, /history, /clearhistory, /help',
           'bot'
         );
         return;
@@ -400,13 +401,22 @@ ${last.join('
   // --- Event bindings ---
   function bindEvents() {
     if (els.toggle) {
-      els.toggle.addEventListener('click', () => {
+      els.toggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Chatbot toggle clicked');
         els.container?.classList.toggle('active');
         if (els.container?.classList.contains('active')) {
           if (els.badge) els.badge.style.display = 'none';
           els.input?.focus();
+          console.log('Chatbot opened');
+        } else {
+          console.log('Chatbot closed');
         }
       });
+      console.log('Chatbot toggle event listener attached');
+    } else {
+      console.error('Chatbot toggle element not found');
     }
 
     els.close?.addEventListener('click', () => {
@@ -486,20 +496,84 @@ ${last.join('
     document.head.appendChild(style);
   })();
 
-  // Boot
-  renderHistoryFromStore();
-  bindEvents();
-  initPrefs();
+  // Initialize after DOM is loaded
+  function initChatbot() {
+    // Retry mechanism to ensure elements are available
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    function tryInitialize() {
+      initializeElements();
+      
+      // Check if critical elements are available
+      if (els.toggle && els.container) {
+        renderHistoryFromStore();
+        bindEvents();
+        initPrefs();
+        console.log('Chatbot initialized successfully');
+      } else {
+        attempts++;
+        if (attempts < maxAttempts) {
+          console.log(`Chatbot initialization attempt ${attempts} failed, retrying...`);
+          setTimeout(tryInitialize, 200);
+        } else {
+          console.error('Failed to initialize chatbot after multiple attempts');
+        }
+      }
+    }
+    
+    tryInitialize();
+  }
+  
+  // Check if DOM is already loaded or wait for it
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initChatbot);
+  } else {
+    // DOM is already loaded, run initialization directly
+    // Add slight delay to ensure elements are rendered
+    setTimeout(initChatbot, 100);
+  }
 
   // Expose minimal API for debugging
   window.vtpChat = {
-    say: (text) => renderMessage(text, 'bot'),
-    ask: (text) => handleUserMessage(text),
+    say: (text) => {
+      if (els.messages) renderMessage(text, 'bot');
+      else console.error('Chatbot not initialized properly');
+    },
+    ask: (text) => {
+      if (els.input) handleUserMessage(text);
+      else console.error('Chatbot not initialized properly');
+    },
     history: () => [...CHAT],
     clearChat: () => {
       CHAT = [];
       saveChatHistory(CHAT);
       renderHistoryFromStore();
+    },
+    // Method to manually toggle chatbot
+    toggleChat: () => {
+      if (els.container) {
+        els.container.classList.toggle('active');
+        if (els.container.classList.contains('active')) {
+          if (els.badge) els.badge.style.display = 'none';
+          els.input?.focus();
+        }
+      }
     }
   };
+  
+  // Also add a global click handler as backup
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('#chatbotToggle') || e.target.closest('.chatbot-toggle')) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (els.container) {
+        els.container.classList.toggle('active');
+        if (els.container.classList.contains('active')) {
+          if (els.badge) els.badge.style.display = 'none';
+          els.input?.focus();
+        }
+      }
+    }
+  });
 })();
