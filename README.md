@@ -60,10 +60,11 @@ voice-translator/
 ### Installation
 
 1. **Download/Clone the repository**
-git clone https://github.com/akashvim3/voicetranslate-pro.git
-cd voicetranslate-pro
+   
+       git clone https://github.com/akashvim3/voicetranslate-pro.git
+       cd voicetranslate-pro
 
-2. **Open in browser**
+3. **Open in browser**
 
 Simply open index.html in your browser
 Or use a local server (recommended):
